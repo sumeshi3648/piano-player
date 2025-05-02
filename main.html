@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div class = "all-buttons">
+            <div class = "row-buttons">
+                <button class="button interactive-btn active" onclick="interactiveMode()">Interactive Mode</button>
+                <button class="button prepared-btn" onclick="preparedMode()">Prepared Mode</button>
+            </div>
+            <div class = "row-buttons" id = "interactiveButtons">
+                <button class="button">Record</button>
+                <button class="button">Stop recording</button>
+                <button class="button">Download recording</button>
+            </div>
+            <div class = "row-buttons" id = "preparedButtons">
+                <input type="file" id="avatar" name="avatar" accept="files/mp3" />
+                <button class="button">Play</button>
+                <button class="button">Stop</button>
+            </div>
+        </div>
+        <div class="piano">
+        <!-- First Octave -->
+        <div class="key-group">
+            <div class="white-key" data-note="C3"><span class="note-label">C</span></div>
+            <div class="black-key" style="left: 55px;" data-note="C#3">C#</div>
+            <div class="white-key" data-note="D3"><span class="note-label">D</span></div>
+            <div class="black-key" style="left: 135px;" data-note="D#3">D#</div>
+            <div class="white-key" data-note="E3"><span class="note-label">E</span></div>
+            <div class="white-key" data-note="F3"><span class="note-label">F</span></div>
+            <div class="black-key" style="left: 300px;" data-note="F#3">F#</div>
+            <div class="white-key" data-note="G3"><span class="note-label">G</span></div>
+            <div class="black-key" style="left: 385px;" data-note="G#3">G#</div>
+            <div class="white-key" data-note="A3"><span class="note-label">A</span></div>
+            <div class="black-key" style="left: 465px;" data-note="A#3">A#</div>
+            <div class="white-key" data-note="B3"><span class="note-label">B</span></div>
+        </div>
+        
+        <!-- Second Octave -->
+        <div class="key-group" style="margin-left: 10px;">
+            <div class="white-key" data-note="C4"><span class="note-label">C</span></div>
+            <div class="black-key" style="left: 55px;" data-note="C#4">C#</div>
+            <div class="white-key" data-note="D4"><span class="note-label">D</span></div>
+            <div class="black-key" style="left: 135px;" data-note="D#4">D#</div>
+            <div class="white-key" data-note="E4"><span class="note-label">E</span></div>
+            <div class="white-key" data-note="F4"><span class="note-label">F</span></div>
+            <div class="black-key" style="left: 300px;" data-note="F#4">F#</div>
+            <div class="white-key" data-note="G4"><span class="note-label">G</span></div>
+            <div class="black-key" style="left: 385px;" data-note="G#4">G#</div>
+            <div class="white-key" data-note="A4"><span class="note-label">A</span></div>
+            <div class="black-key" style="left: 465px;" data-note="A#4">A#</div>
+            <div class="white-key" data-note="B4"><span class="note-label">B</span></div>
+        </div>
+
+        <!--Third Octave-->
+        <div class="key-group" style="margin-left: 10px;">
+            <div class="white-key" data-note="C5"><span class="note-label">C</span></div>
+            <div class="black-key" style="left: 55px;" data-note="C#5">C#</div>
+            <div class="white-key" data-note="D5"><span class="note-label">D</span></div>
+            <div class="black-key" style="left: 135px;" data-note="D#5">D#</div>
+            <div class="white-key" data-note="E5"><span class="note-label">E</span></div>
+        </div>
+    </div>
+
+    </body>
+</html>
+
+<script src = "script.js">
+    
+</script>
