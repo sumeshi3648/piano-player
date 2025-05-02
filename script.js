@@ -313,3 +313,116 @@ stopButton.addEventListener('click', () => {
 });
 
 //======PREPARED MODE======//
+let playbackStartTime;
+let playbackNotes = [];
+let playbackInterval;
+let currentPlaybackPosition = 0;
+let isPlaying = false;
+let playbackSpeed = 1.0;
+let upcomingNotesDisplay = [];
+
+function preparedMode() {
+    document.getElementById("preparedButtons").style.display = "flex";
+    document.getElementById("interactiveButtons").style.display = "none";
+    document.querySelector('.prepared-btn').classList.add('active');
+    document.querySelector('.interactive-btn').classList.remove('active');
+    stopPlayback(); // Stop any ongoing playback when switching modes
+}
+
+function loadJSONFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.notes && Array.isArray(data.notes)) {
+                playbackNotes = data.notes.sort((a, b) => a.startTime - b.startTime);
+                upcomingNotesDisplay = [...playbackNotes];
+                console.log("Loaded recording with", playbackNotes.length, "notes");
+                document.querySelector('.play-button').disabled = false;
+                document.querySelector('.stop-button').disabled = true;
+            } else {
+                console.error("Invalid JSON format");
+            }
+        } catch (error) {
+            console.error("Error parsing JSON:", error);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function startPlayback() {
+    if (playbackNotes.length === 0 || isPlaying) return;
+    
+    isPlaying = true;
+    playbackStartTime = audioContext.currentTime * 1000;
+    currentPlaybackPosition = 0;
+    
+    document.querySelector('.play-button').disabled = true;
+    document.querySelector('.stop-button').disabled = false;
+    
+    if (playbackInterval) clearInterval(playbackInterval);
+    
+    playbackInterval = setInterval(() => {
+        const elapsed = (audioContext.currentTime * 1000 - playbackStartTime) * playbackSpeed;
+
+        while (currentPlaybackPosition < playbackNotes.length && 
+               playbackNotes[currentPlaybackPosition].startTime <= elapsed) {
+            const note = playbackNotes[currentPlaybackPosition];
+            playNote(note.key);
+
+            setTimeout(() => {
+                stopNote(note.key);
+            }, note.duration / playbackSpeed);
+            
+            currentPlaybackPosition++;
+        }
+
+        updateUpcomingNotes(elapsed);
+
+        if (currentPlaybackPosition >= playbackNotes.length) {
+            stopPlayback();
+        }
+    }, 10); //check every 10ms
+}
+
+function stopPlayback() {
+    if (playbackInterval) clearInterval(playbackInterval);
+    isPlaying = false;
+    
+    for (const note in activeOscillators) {
+        stopNote(note);
+    }
+    
+    document.querySelector('.play-button').disabled = false;
+    document.querySelector('.stop-button').disabled = true;
+    
+    // Reset playback position
+    currentPlaybackPosition = 0;
+    upcomingNotesDisplay = [...playbackNotes];
+    updateUpcomingNotes(0);
+}
+
+function updateUpcomingNotes(elapsed) {
+    const upcoming = playbackNotes.filter(n => 
+        n.startTime > elapsed && n.startTime <= elapsed + 2000 // Show next 2 seconds
+    );
+
+    console.log("Upcoming notes:", upcoming);
+}
+
+function changePlaybackSpeed(speed) {
+    playbackSpeed = speed;
+    if (isPlaying) {
+        // Restart playback with new speed
+        stopPlayback();
+        startPlayback();
+    }
+}
+
+
+document.getElementById('jsonUpload').addEventListener('change', loadJSONFile);
+document.querySelector('.play-button').addEventListener('click', startPlayback);
+document.querySelector('.stop-button').addEventListener('click', stopPlayback);

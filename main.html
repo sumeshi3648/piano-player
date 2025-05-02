@@ -22,16 +22,16 @@
             </div>
             <div class = "row-buttons" id = "preparedButtons">
                 <input type="file" id="jsonUpload" accept=".json" />
-    <button class="button play-button" disabled>Play</button>
-    <button class="button stop-button" disabled>Stop</button>
-    <select class="button speed-control" onchange="changePlaybackSpeed(parseFloat(this.value))">
-        <option value="0.5">0.5x</option>
-        <option value="0.75">0.75x</option>
-        <option value="1.0" selected>1.0x</option>
-        <option value="1.25">1.25x</option>
-        <option value="1.5">1.5x</option>
-    </select>
-    <div id="upcomingNotesDisplay"></div>
+                <button class="button play-button" disabled>Play</button>
+                <button class="button stop-button" disabled>Stop</button>
+                <select class="button speed-control" onchange="changePlaybackSpeed(parseFloat(this.value))">
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1.0" selected>1.0x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                </select>
+                <div id="upcomingNotesDisplay"></div>
             </div>
         </div>
         <div class = "progress-container" id="progress-bar">
