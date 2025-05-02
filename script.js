@@ -1,5 +1,6 @@
 function interactiveMode() {
     document.getElementById("interactiveButtons").style.display = "flex";
+    document.getElementById("progress-bar").style.display = "flex";
     document.getElementById("preparedButtons").style.display = "none";
     document.querySelector('.interactive-btn').classList.add('active');
     document.querySelector('.prepared-btn').classList.remove('active');
@@ -7,6 +8,7 @@ function interactiveMode() {
 function preparedMode() {
     document.getElementById("preparedButtons").style.display = "flex";
     document.getElementById("interactiveButtons").style.display = "none";
+    document.getElementById("progress-bar").style.display = "none";
     document.querySelector('.prepared-btn').classList.add('active');
     document.querySelector('.interactive-btn').classList.remove('active');
 }
@@ -31,50 +33,70 @@ const keyToNote = {
     'p': 'E4', 'z': 'F4', 's': 'F#4', 'x': 'G4', 'd': 'G#4', 'c': 'A4', 'f': 'A#4', 'v': 'B4', 
     'b': 'C5', 'h': 'C#5', 'n': 'D5', 'j': 'D#5', 'm': 'E5'
 }
+
+document.addEventListener('mousedown', () => {
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+});
+
 function playNote(note){
-    // check note exists
     if (!noteFrequencies[note]) return;
-    //create sound generator
+
+    if (activeOscillators[note]) {
+        stopNote(note);
+    }
+    
     const oscillator = audioContext.createOscillator();
-    //create volume control
     const gainNode = audioContext.createGain();
-    oscillator.type = 'sine'; //basic smooth waveform
+    
+    oscillator.type = 'sine';
     oscillator.frequency.value = noteFrequencies[note];
-    //initial volume (30%)
     gainNode.gain.value = 0.3;
-    //connect nodes: oscillator - gain - output
+    
+    // Connect nodes: oscillator -> gain -> analyser -> splitter
     oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    //start the sound
-    oscillator.start();
-    //store reference to stop later
+    gainNode.connect(analyserNode);  // This is the key change - connect to analyser
+    
+    oscillator.start(0);
+    
     activeOscillators[note] = { oscillator, gainNode };
-    //visual feedback
+    
     const keyElement = document.querySelector(`[data-note="${note}"]`);
     if (keyElement) keyElement.classList.add('active');
 
+    // If recording, track the note start time
+    if (isRecording) {
+        const currentTime = Date.now() - recordingStartTime;
+        activeNotes[note] = currentTime;
+    }
 }
+
 function stopNote(note) {
     if (!activeOscillators[note]) return;
+    // Stop immediately without fade
+    activeOscillators[note].oscillator.stop();
+    activeOscillators[note].gainNode.disconnect();
+    delete activeOscillators[note];
 
-    activeOscillators[note].gainNode.gain.setValueAtTime(
-        activeOscillators[note].gainNode.gain.value, // current volume
-        audioContext.currentTime // start fade
-    );
-    activeOscillators[note].gainNode.gain.exponentialRampToValueAtTime(
-        0.001, //very quiet
-        audioContext.currentTime + 0.03 //over 30ms
-    );
-    
-    //stop oscillator after fade completes
-    setTimeout(() => {
-        activeOscillators[note].oscillator.stop();
-        delete activeOscillators[note];
-    }, 30);
-    
-    //remove visual highlight
+    // Remove visual highlight
     const keyElement = document.querySelector(`[data-note="${note}"]`);
     if (keyElement) keyElement.classList.remove('active');
+
+    // If recording and note was pressed, record the note duration
+    if (isRecording && activeNotes[note] !== undefined) {
+        const currentTime = Date.now() - recordingStartTime;
+        const startTime = activeNotes[note];
+        const duration = currentTime - startTime;
+        
+        recordedNotes.push({
+            key: note,
+            startTime: startTime,
+            duration: duration
+        });
+        
+        delete activeNotes[note];
+    }
 }
 document.querySelectorAll('.white-key, .black-key').forEach(key => {
     const note = key.getAttribute('data-note');
@@ -98,3 +120,196 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
+//======CREATING RECORDINGS======//
+let mediaRecorder;
+let audioChunks = [];
+let audioStreamDestination;
+let splitterGain; 
+let analyserNode;
+let dataArray;
+let canvas;
+let canvasCtx;
+
+// JSON variables
+let recordingStartTime;
+let isRecording = false;
+let recordedNotes = [];
+let activeNotes = {}; 
+
+const recordButton = document.getElementById('recordButton');
+const stopButton = document.getElementById('stopButton');
+const downloadButton = document.getElementById('downloadButton');
+
+function setupAudioRecording() {
+    audioStreamDestination = audioContext.createMediaStreamDestination();
+    
+    // Create analyser node for visualization
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 256;
+    dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+
+    // Get canvas for drawing waveform
+    canvas = document.getElementById('waveform');
+    canvasCtx = canvas.getContext('2d');
+    
+    // The audio chain should be: oscillator -> gain -> analyser -> splitter
+    // Where splitter goes to both destination and recorder
+    splitterGain = audioContext.createGain();
+    splitterGain.gain.value = 1.0;
+    
+    // Connect analyser to splitter
+    analyserNode.connect(splitterGain);
+    
+    // Connect splitter to both speakers and recorder
+    splitterGain.connect(audioContext.destination); // For playback
+    splitterGain.connect(audioStreamDestination);   // For recording
+}
+
+
+function drawWaveform() {
+    analyserNode.getByteFrequencyData(dataArray);
+    
+    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw with more contrast
+    canvasCtx.fillStyle = 'rgba(211, 3, 3, 0.8)';
+    
+    const barWidth = (canvas.width / dataArray.length) * 2.5;
+    let x = 0;
+    
+    for (let i = 0; i < dataArray.length; i++) {
+        const barHeight = (dataArray[i] / 255) * canvas.height;
+        
+        // Draw the bar centered
+        canvasCtx.fillRect(
+            x, 
+            canvas.height - barHeight, 
+            barWidth, 
+            barHeight
+        );
+        
+        x += barWidth + 1;
+    }
+}
+
+
+function animate() {
+    drawWaveform();
+    requestAnimationFrame(animate); // Keeps updating
+}
+
+// Start the animation loop
+window.addEventListener('load', () => {
+    setupAudioRecording();
+    animate();
+});
+
+window.addEventListener('load', () => {
+    setupAudioRecording();
+    
+    // Rest of your initialization code...
+    document.querySelectorAll('.white-key, .black-key').forEach(key => {
+        // Your existing event listeners...
+    });
+});
+
+setupAudioRecording();
+
+recordButton.addEventListener('click', async () => {
+    try {
+        audioChunks = [];
+        recordedNotes = [];
+        activeNotes = {};
+        recordingStartTime = Date.now();
+        isRecording = true;
+
+        //create media recorder from audio stream
+        mediaRecorder = new MediaRecorder(audioStreamDestination.stream);
+        mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, {type: 'audio/mp3'});
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            //enable download
+            downloadButton.disabled = false;
+            downloadJSONButton.disabled = false;
+            downloadButton.onclick = () => {
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = audioUrl;
+                a.download = 'piano-recording.mp3';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(audioUrl);
+                }, 100);
+            };
+
+            //JSON download
+            downloadJSONButton.onclick = () => {
+                const recordingData = {
+                    name: "Piano Recording",
+                    duration: Date.now() - recordingStartTime,
+                    notes: recordedNotes
+                };
+                const jsonBlob = new Blob([JSON.stringify(recordingData, null, 2)], {type: 'application/json'});
+                const jsonUrl = URL.createObjectURL(jsonBlob);
+
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = jsonUrl;
+                a.download = 'piano-recording.json';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(jsonUrl);
+                }, 100);
+            };
+        };
+        mediaRecorder.start(100);
+
+        recordButton.disabled = true;
+        stopButton.disabled = false;
+        downloadButton.disabled = true;
+        downloadJSONButton.disabled = true;
+
+        console.log('Recording started');
+
+
+    } catch (error) {
+        console.error('Error starting recording')
+    }
+});
+
+stopButton.addEventListener('click', () => {
+    if(mediaRecorder && mediaRecorder.state != 'inactive') {
+        mediaRecorder.stop();
+        isRecording = false;
+
+        for (const note in activeNotes) {
+            const currentTime = Date.now() - recordingStartTime;
+            const startTime = activeNotes[note];
+            const duration = currentTime - startTime;
+            
+            recordedNotes.push({
+                key: note,
+                startTime: startTime,
+                duration: duration
+            });
+        }
+        activeNotes = {};
+        recordButton.disabled = false;
+        stopButton.disabled = true;
+
+        console.log('Recording stopped');
+    }
+});
+
+//======PREPARED MODE======//

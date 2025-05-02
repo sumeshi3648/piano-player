@@ -15,15 +15,27 @@
                 <button class="button prepared-btn" onclick="preparedMode()">Prepared Mode</button>
             </div>
             <div class = "row-buttons" id = "interactiveButtons">
-                <button class="button">Record</button>
-                <button class="button">Stop recording</button>
-                <button class="button">Download recording</button>
+                <button class="button" id="recordButton">Record</button>
+                <button class="button" id="stopButton" disabled>Stop recording</button>
+                <button class="button" id="downloadButton" disabled>Download mp3 recording</button>
+                <button class="button" id="downloadJSONButton" disabled>Download JSON file</button>
             </div>
             <div class = "row-buttons" id = "preparedButtons">
-                <input type="file" id="avatar" name="avatar" accept="files/mp3" />
-                <button class="button">Play</button>
-                <button class="button">Stop</button>
+                <input type="file" id="jsonUpload" accept=".json" />
+    <button class="button play-button" disabled>Play</button>
+    <button class="button stop-button" disabled>Stop</button>
+    <select class="button speed-control" onchange="changePlaybackSpeed(parseFloat(this.value))">
+        <option value="0.5">0.5x</option>
+        <option value="0.75">0.75x</option>
+        <option value="1.0" selected>1.0x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+    </select>
+    <div id="upcomingNotesDisplay"></div>
             </div>
+        </div>
+        <div class = "progress-container" id="progress-bar">
+            <canvas id="waveform" width="800" height="100"></canvas>
         </div>
         <div class="piano">
         <!-- First Octave -->
@@ -67,10 +79,6 @@
             <div class="white-key" data-note="E5"><span class="note-label">E</span></div>
         </div>
     </div>
-
+<script src = "script.js"></script>
     </body>
 </html>
-
-<script src = "script.js">
-    
-</script>

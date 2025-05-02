@@ -117,3 +117,20 @@ html, body {
 .note-label {
     pointer-events: none;
 }
+
+
+/* Center the progress bar container */
+.progress-container {
+    display: flex;
+    justify-content: center;    /* Center horizontally */
+    align-items: center;        /* Center vertically */
+    height: 100px;               /* Add some space for positioning */
+    padding-block: 20px;
+}
+
+#waveform {
+    display: block;
+    margin: 20px auto;
+    background-color: #f3f3f3;  /* Optional background color */
+    border-radius: 10px;
+}
