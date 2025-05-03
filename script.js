@@ -16,7 +16,6 @@ function preparedMode() {
 const audioContext = new (window.AudioContext || window.webkitAudioContext) ();
 const activeOscillators = {};
 
-// Creating a object of Audio with a default sound
 const noteFrequencies = {
     'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 
     'F#3': 185.0, 'G3': 196.0, 'G#3': 207.65, 'A3': 220.0, 'A#3': 233.08, 'B3': 246.94,
@@ -54,9 +53,9 @@ function playNote(note){
     oscillator.frequency.value = noteFrequencies[note];
     gainNode.gain.value = 0.3;
     
-    // Connect nodes: oscillator -> gain -> analyser -> splitter
+    //oscillator -> gain -> analyser -> splitter
     oscillator.connect(gainNode);
-    gainNode.connect(analyserNode);  // This is the key change - connect to analyser
+    gainNode.connect(analyserNode);  //connect to analyser
     
     oscillator.start(0);
     
@@ -65,7 +64,7 @@ function playNote(note){
     const keyElement = document.querySelector(`[data-note="${note}"]`);
     if (keyElement) keyElement.classList.add('active');
 
-    // If recording, track the note start time
+    //if recording, track the note start time
     if (isRecording) {
         const currentTime = Date.now() - recordingStartTime;
         activeNotes[note] = currentTime;
@@ -74,7 +73,7 @@ function playNote(note){
 
 function stopNote(note) {
     if (!activeOscillators[note]) return;
-    // Stop immediately without fade
+    //stop immediately
     activeOscillators[note].oscillator.stop();
     activeOscillators[note].gainNode.disconnect();
     delete activeOscillators[note];
@@ -83,7 +82,7 @@ function stopNote(note) {
     const keyElement = document.querySelector(`[data-note="${note}"]`);
     if (keyElement) keyElement.classList.remove('active');
 
-    // If recording and note was pressed, record the note duration
+    //record the note duration
     if (isRecording && activeNotes[note] !== undefined) {
         const currentTime = Date.now() - recordingStartTime;
         const startTime = activeNotes[note];
@@ -143,24 +142,22 @@ const downloadButton = document.getElementById('downloadButton');
 function setupAudioRecording() {
     audioStreamDestination = audioContext.createMediaStreamDestination();
     
-    // Create analyser node for visualization
+    //analyser node for visualization
     analyserNode = audioContext.createAnalyser();
     analyserNode.fftSize = 256;
     dataArray = new Uint8Array(analyserNode.frequencyBinCount);
 
-    // Get canvas for drawing waveform
+    //canvas for drawing waveform
     canvas = document.getElementById('waveform');
     canvasCtx = canvas.getContext('2d');
     
-    // The audio chain should be: oscillator -> gain -> analyser -> splitter
+    // oscillator -> gain -> analyser -> splitter
     // Where splitter goes to both destination and recorder
     splitterGain = audioContext.createGain();
     splitterGain.gain.value = 1.0;
     
-    // Connect analyser to splitter
     analyserNode.connect(splitterGain);
     
-    // Connect splitter to both speakers and recorder
     splitterGain.connect(audioContext.destination); // For playback
     splitterGain.connect(audioStreamDestination);   // For recording
 }
@@ -171,7 +168,6 @@ function drawWaveform() {
     
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw with more contrast
     canvasCtx.fillStyle = 'rgba(211, 3, 3, 0.8)';
     
     const barWidth = (canvas.width / dataArray.length) * 2.5;
@@ -180,7 +176,7 @@ function drawWaveform() {
     for (let i = 0; i < dataArray.length; i++) {
         const barHeight = (dataArray[i] / 255) * canvas.height;
         
-        // Draw the bar centered
+        //bar is centered
         canvasCtx.fillRect(
             x, 
             canvas.height - barHeight, 
@@ -195,10 +191,10 @@ function drawWaveform() {
 
 function animate() {
     drawWaveform();
-    requestAnimationFrame(animate); // Keeps updating
+    requestAnimationFrame(animate); //keeps updating
 }
 
-// Start the animation loop
+//start animation loop
 window.addEventListener('load', () => {
     setupAudioRecording();
     animate();
@@ -206,10 +202,8 @@ window.addEventListener('load', () => {
 
 window.addEventListener('load', () => {
     setupAudioRecording();
-    
-    // Rest of your initialization code...
+
     document.querySelectorAll('.white-key, .black-key').forEach(key => {
-        // Your existing event listeners...
     });
 });
 
@@ -416,7 +410,7 @@ function updateUpcomingNotes(elapsed) {
 function changePlaybackSpeed(speed) {
     playbackSpeed = speed;
     if (isPlaying) {
-        // Restart playback with new speed
+        //restart playback with new speed
         stopPlayback();
         startPlayback();
     }

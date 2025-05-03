@@ -7,6 +7,7 @@ html, body {
     overflow-x: hidden;
     color: #181D27;
     scroll-behavior: smooth;
+    background-image: url("../assets/background1.jpg");
 }
 
 .all-buttons {
@@ -29,7 +30,7 @@ html, body {
 }
 
 .button{
-  background-color: #ffe573;
+  background-color: #97cafa;
   border-radius: 8px;
   border-style: none;
   box-sizing: border-box;
@@ -49,17 +50,17 @@ html, body {
 }
 
 .interactive-btn, .prepared-btn {
-    background-color: #ffb6c1; /* Light pink when not active */
+    background-color: #ffb6c1; 
 }
 .interactive-btn.active, .prepared-btn.active {
-    background-color: #ff69b4; /* Brighter pink when active */
+    background-color: #ff69b4; 
 }
 
 /* PIANO */
 .piano {
     display: flex;
     position: relative;
-    background-color: #472300;
+    background-color: #3e2f45;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
@@ -119,18 +120,17 @@ html, body {
 }
 
 
-/* Center the progress bar container */
 .progress-container {
     display: flex;
-    justify-content: center;    /* Center horizontally */
-    align-items: center;        /* Center vertically */
-    height: 100px;               /* Add some space for positioning */
+    justify-content: center;    
+    align-items: center;        
+    height: 100px;               
     padding-block: 20px;
 }
 
 #waveform {
     display: block;
     margin: 20px auto;
-    background-color: #f3f3f3;  /* Optional background color */
+    background-color: #f3f3f3;  
     border-radius: 10px;
 }
